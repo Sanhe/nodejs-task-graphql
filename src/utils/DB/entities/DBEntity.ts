@@ -44,11 +44,11 @@ export default abstract class DBEntity<
       );
     }
     if (options.inArray) {
-      const array = entity[options.key] as typeof options.inArray[];
+      const array = entity[options.key] as (typeof options.inArray)[];
       return array.some((value) => lodash.isEqual(value, options.inArray));
     }
     if (options.inArrayAnyOf) {
-      const array = entity[options.key] as typeof options.inArray[];
+      const array = entity[options.key] as (typeof options.inArray)[];
       return array.some((value) =>
         options.inArrayAnyOf?.some((valueInput) =>
           lodash.isEqual(value, valueInput)
@@ -90,6 +90,7 @@ export default abstract class DBEntity<
   async findMany<K extends keyof Entity>(
     option: OptionsInArrayAnyOf<Entity, K>
   ): Promise<Entity[]>;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async findMany<K extends keyof Entity>(): Promise<Entity[]>;
   async findMany<K extends keyof Entity>(
     options?: Options<Entity, K>
@@ -105,6 +106,7 @@ export default abstract class DBEntity<
     if (idx === -1) throw new NoRequiredEntity('delete');
     const deleted = this.entities[idx];
     this.entities.splice(idx, 1);
+    // @ts-expect-error - we know that the entity has an id
     return deleted;
   }
 
@@ -112,7 +114,9 @@ export default abstract class DBEntity<
     const idx = this.entities.findIndex((entity) => entity.id === id);
     if (idx === -1) throw new NoRequiredEntity('change');
     const changed = { ...this.entities[idx], ...changeDTO };
+    // @ts-expect-error - we know that the entity has an id
     this.entities.splice(idx, 1, changed);
+    // @ts-expect-error - we know that the entity has an id
     return changed;
   }
 }

@@ -46,7 +46,6 @@
     "eslint": "^8.32.0",
     "eslint-config-airbnb-typescript": "^17.0.0",
     "eslint-config-prettier": "^8.6.0",
-    "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^4.2.1",
     "fastify-tsconfig": "^1.0.1",
     "prettier": "^2.8.3",
