@@ -1,3 +1,4 @@
+import { constants as httpStatus } from 'node:http2';
 import { FastifyInstance } from 'fastify';
 import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-schema-to-ts';
 import { idParamSchema } from '../../utils/reusedSchemas';
@@ -17,14 +18,14 @@ import {
   USER_NOT_SUBSCRIBED,
 } from '../../utils/messages/userMessages';
 import { ID_IS_REQUIRED, INTERNAL_SERVER_ERROR, REQUEST_BODY_IS_REQUIRED } from '../../utils/messages/messages';
-import { BAD_REQUEST_STATUS_CODE, NOT_FOUND_STATUS_CODE } from '../../utils/requests/requestStatusCodes';
 import { NoRequiredEntity } from '../../utils/DB/errors/NoRequireEntity.error';
+import { subscribeUser, unSubscribeUser } from '../../utils/handlers/subscriptionHandlers';
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify: FastifyInstance): Promise<void> => {
-  fastify.get('/', async function (request, reply): Promise<UserEntity[]> {
+  fastify.get('/', async (): Promise<UserEntity[]> => {
     const users = await fastify.db.users.findMany();
 
-    return reply.send(users);
+    return users;
   });
 
   fastify.get(
@@ -34,19 +35,19 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify: FastifyInstance
         params: idParamSchema,
       },
     },
-    async function (request: RequestWithParamsIdType, reply): Promise<UserEntity> {
+    async (request: RequestWithParamsIdType): Promise<UserEntity> => {
       const { id } = request.params;
 
-      fastify.assert(id, BAD_REQUEST_STATUS_CODE, ID_IS_REQUIRED);
+      fastify.assert(id, httpStatus.HTTP_STATUS_BAD_REQUEST, ID_IS_REQUIRED);
 
       const user = await fastify.db.users.findOne({
         key: 'id',
         equals: request.params.id,
       });
 
-      fastify.assert(user, NOT_FOUND_STATUS_CODE, USER_NOT_FOUND);
+      fastify.assert(user, httpStatus.HTTP_STATUS_NOT_FOUND, USER_NOT_FOUND);
 
-      return reply.send(user);
+      return user;
     }
   );
 
@@ -57,16 +58,18 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify: FastifyInstance
         body: createUserBodySchema,
       },
     },
-    async function (request: CreateUserRequestType, reply): Promise<UserEntity> {
+    async (request: CreateUserRequestType, reply): Promise<UserEntity> => {
       const userDto = request.body;
 
-      fastify.assert(userDto, BAD_REQUEST_STATUS_CODE, REQUEST_BODY_IS_REQUIRED);
+      fastify.assert(userDto, httpStatus.HTTP_STATUS_BAD_REQUEST, REQUEST_BODY_IS_REQUIRED);
 
       const user = await fastify.db.users.create(userDto);
 
-      fastify.assert(user, BAD_REQUEST_STATUS_CODE, INTERNAL_SERVER_ERROR);
+      fastify.assert(user, httpStatus.HTTP_STATUS_BAD_REQUEST, INTERNAL_SERVER_ERROR);
 
-      return reply.send(user);
+      reply.status(httpStatus.HTTP_STATUS_CREATED);
+
+      return user;
     }
   );
 
@@ -77,26 +80,63 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify: FastifyInstance
         params: idParamSchema,
       },
     },
-    async function (request: RequestWithParamsIdType, reply): Promise<UserEntity> {
+    async (request: RequestWithParamsIdType, reply): Promise<UserEntity> => {
       const { id } = request.params;
 
-      fastify.assert(id, BAD_REQUEST_STATUS_CODE, ID_IS_REQUIRED);
+      fastify.assert(id, httpStatus.HTTP_STATUS_BAD_REQUEST, ID_IS_REQUIRED);
 
-      let deletedUser;
+      const userToDelete = await fastify.db.users.findOne({
+        key: 'id',
+        equals: id,
+      });
+
+      fastify.assert(userToDelete, httpStatus.HTTP_STATUS_BAD_REQUEST, USER_NOT_FOUND);
 
       try {
-        deletedUser = await fastify.db.users.delete(id);
+        const deletedEntities = [];
+
+        const userPosts = await fastify.db.posts.findMany({
+          key: 'userId',
+          equals: id,
+        });
+        const deletedUserPosts = userPosts.map(async (post) => {
+          return fastify.db.posts.delete(post.id);
+        });
+        deletedEntities.push(...deletedUserPosts);
+
+        const userSubscriptions = await fastify.db.users.findMany({
+          key: 'subscribedToUserIds',
+          inArray: id,
+        });
+        const deletedSubscriptions = userSubscriptions.map(async (subscriptionUser) => {
+          return unSubscribeUser(fastify, userToDelete, subscriptionUser);
+        });
+        deletedEntities.push(...deletedSubscriptions);
+
+        const userProfile = await fastify.db.profiles.findOne({
+          key: 'userId',
+          equals: id,
+        });
+        if (userProfile) {
+          const deletedUserProfile = fastify.db.profiles.delete(userProfile.id);
+          deletedEntities.push(deletedUserProfile);
+        }
+
+        const deletedUser = fastify.db.users.delete(id);
+        deletedEntities.push(deletedUser);
+
+        await Promise.all(deletedEntities);
       } catch (error) {
         if (error instanceof NoRequiredEntity) {
-          fastify.assert(false, BAD_REQUEST_STATUS_CODE, USER_NOT_FOUND);
+          fastify.assert(false, httpStatus.HTTP_STATUS_BAD_REQUEST, USER_NOT_FOUND);
         } else {
           throw error;
         }
       }
 
-      fastify.assert(deletedUser, BAD_REQUEST_STATUS_CODE, INTERNAL_SERVER_ERROR);
+      reply.status(httpStatus.HTTP_STATUS_NO_CONTENT);
 
-      return reply.send(deletedUser);
+      return userToDelete;
     }
   );
 
@@ -108,34 +148,30 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify: FastifyInstance
         params: idParamSchema,
       },
     },
-    async function (request: SubscribeUserRequestType, reply): Promise<UserEntity> {
+    async (request: SubscribeUserRequestType): Promise<UserEntity> => {
       const { id } = request.params;
       const { userId } = request.body;
 
-      fastify.assert(id, BAD_REQUEST_STATUS_CODE, ID_IS_REQUIRED);
-      fastify.assert(userId, BAD_REQUEST_STATUS_CODE, USER_ID_IS_REQUIRED);
+      fastify.assert(id, httpStatus.HTTP_STATUS_BAD_REQUEST, ID_IS_REQUIRED);
+      fastify.assert(userId, httpStatus.HTTP_STATUS_BAD_REQUEST, USER_ID_IS_REQUIRED);
 
       const subscriber = await fastify.db.users.findOne({
         key: 'id',
         equals: id,
       });
 
-      fastify.assert(subscriber, BAD_REQUEST_STATUS_CODE, USER_NOT_FOUND);
+      fastify.assert(subscriber, httpStatus.HTTP_STATUS_BAD_REQUEST, USER_NOT_FOUND);
 
       const subscribeToUser = await fastify.db.users.findOne({
         key: 'id',
         equals: userId,
       });
 
-      fastify.assert(subscribeToUser, BAD_REQUEST_STATUS_CODE, SUBSCRIBE_TO_USER_NOT_FOUND);
+      fastify.assert(subscribeToUser, httpStatus.HTTP_STATUS_BAD_REQUEST, SUBSCRIBE_TO_USER_NOT_FOUND);
 
-      const subscribedToUserIds = [...subscribeToUser.subscribedToUserIds, subscriber.id];
+      const updatedSubscribee = subscribeUser(fastify, subscriber, subscribeToUser);
 
-      const updatedUser = await fastify.db.users.change(subscribeToUser.id, {
-        subscribedToUserIds,
-      });
-
-      return reply.send(updatedUser);
+      return updatedSubscribee;
     }
   );
 
@@ -147,30 +183,30 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify: FastifyInstance
         params: idParamSchema,
       },
     },
-    async function (request: UnSubscribeUserRequestType, reply): Promise<UserEntity> {
+    async (request: UnSubscribeUserRequestType): Promise<UserEntity> => {
       const { id } = request.params;
       const { userId } = request.body;
 
-      fastify.assert(id, BAD_REQUEST_STATUS_CODE, ID_IS_REQUIRED);
-      fastify.assert(userId, BAD_REQUEST_STATUS_CODE, USER_ID_IS_REQUIRED);
+      fastify.assert(id, httpStatus.HTTP_STATUS_BAD_REQUEST, ID_IS_REQUIRED);
+      fastify.assert(userId, httpStatus.HTTP_STATUS_BAD_REQUEST, USER_ID_IS_REQUIRED);
 
       const subscriber = await fastify.db.users.findOne({
         key: 'id',
         equals: id,
       });
 
-      fastify.assert(subscriber, BAD_REQUEST_STATUS_CODE, USER_NOT_FOUND);
+      fastify.assert(subscriber, httpStatus.HTTP_STATUS_BAD_REQUEST, USER_NOT_FOUND);
 
       const unsubscribeFromUser = await fastify.db.users.findOne({
         key: 'id',
         equals: userId,
       });
 
-      fastify.assert(unsubscribeFromUser, BAD_REQUEST_STATUS_CODE, USER_NOT_FOUND);
+      fastify.assert(unsubscribeFromUser, httpStatus.HTTP_STATUS_BAD_REQUEST, USER_NOT_FOUND);
 
       const isSubscribed = unsubscribeFromUser.subscribedToUserIds.includes(subscriber.id);
 
-      fastify.assert(isSubscribed, BAD_REQUEST_STATUS_CODE, USER_NOT_SUBSCRIBED);
+      fastify.assert(isSubscribed, httpStatus.HTTP_STATUS_BAD_REQUEST, USER_NOT_SUBSCRIBED);
 
       const subscribedUserIdIndex = unsubscribeFromUser.subscribedToUserIds.findIndex(
         (subscriberUserId) => subscriberUserId === subscriber.id
@@ -181,7 +217,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify: FastifyInstance
         subscribedToUserIds: unsubscribeFromUser.subscribedToUserIds,
       });
 
-      return reply.send(updatedUser);
+      return updatedUser;
     }
   );
 
@@ -193,25 +229,25 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify: FastifyInstance
         params: idParamSchema,
       },
     },
-    async function (request: ChangeUserRequestType, reply): Promise<UserEntity> {
+    async (request: ChangeUserRequestType): Promise<UserEntity> => {
       const { id } = request.params;
       const userDto = request.body;
 
-      fastify.assert(id, BAD_REQUEST_STATUS_CODE, ID_IS_REQUIRED);
-      fastify.assert(userDto, BAD_REQUEST_STATUS_CODE, REQUEST_BODY_IS_REQUIRED);
+      fastify.assert(id, httpStatus.HTTP_STATUS_BAD_REQUEST, ID_IS_REQUIRED);
+      fastify.assert(userDto, httpStatus.HTTP_STATUS_BAD_REQUEST, REQUEST_BODY_IS_REQUIRED);
 
       const user = await fastify.db.users.findOne({
         key: 'id',
         equals: id,
       });
 
-      fastify.assert(user, BAD_REQUEST_STATUS_CODE, USER_NOT_FOUND);
+      fastify.assert(user, httpStatus.HTTP_STATUS_BAD_REQUEST, USER_NOT_FOUND);
 
       const updatedUser = await fastify.db.users.change(id, {
         ...userDto,
       });
 
-      return reply.send(updatedUser);
+      return updatedUser;
     }
   );
 };
