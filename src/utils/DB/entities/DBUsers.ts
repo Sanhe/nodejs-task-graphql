@@ -8,14 +8,10 @@ export type UserEntity = {
   email: string;
   subscribedToUserIds: string[];
 };
-type CreateUserDTO = Omit<UserEntity, 'id' | 'subscribedToUserIds'>;
-type ChangeUserDTO = Partial<Omit<UserEntity, 'id'>>;
+export type CreateUserDTO = Omit<UserEntity, 'id' | 'subscribedToUserIds'>;
+export type ChangeUserDTO = Partial<Omit<UserEntity, 'id'>>;
 
-export default class DBUsers extends DBEntity<
-  UserEntity,
-  ChangeUserDTO,
-  CreateUserDTO
-> {
+export default class DBUsers extends DBEntity<UserEntity, ChangeUserDTO, CreateUserDTO> {
   async create(dto: CreateUserDTO) {
     const created: UserEntity = {
       ...dto,
