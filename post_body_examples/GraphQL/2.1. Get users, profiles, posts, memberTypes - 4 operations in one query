@@ -1,0 +1,14 @@
+{
+    users {
+        id
+    },
+    profiles {
+        id
+    },
+    posts {
+        id
+    },
+    memberTypes {
+        id
+    }
+}

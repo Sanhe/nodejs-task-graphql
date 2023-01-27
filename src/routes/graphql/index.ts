@@ -12,7 +12,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify): Promise<void> 
         body: graphqlBodySchema,
       },
     },
-    async function (request) {
+    async (request) => {
       const { query } = request.body;
 
       const schema = new GraphQLSchema({
