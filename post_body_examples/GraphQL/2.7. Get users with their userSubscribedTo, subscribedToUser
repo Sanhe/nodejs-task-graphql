@@ -1,0 +1,30 @@
+{
+    users {
+        id,
+        firstName,
+        userSubscribedTo {
+            id,
+            firstName,
+            userSubscribedTo {
+                id,
+                firstName,
+            },
+            subscribedToUser {
+                id,
+                firstName
+            }
+        }
+        subscribedToUser {
+            id,
+            firstName,
+            userSubscribedTo {
+                id,
+                firstName,
+            },
+            subscribedToUser {
+                id,
+                firstName
+            }
+        }
+    }
+}
