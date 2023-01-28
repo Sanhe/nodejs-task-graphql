@@ -1,49 +1,11 @@
 import { FastifyInstance } from 'fastify';
-import { GraphQLID, GraphQLList, GraphQLObjectType, GraphQLString } from 'graphql/type';
+import { GraphQLID, GraphQLList, GraphQLObjectType } from 'graphql/type';
+import { graphQLUser } from './types/users';
+import { graphQLProfile } from './types/profiles';
+import { graphQLPost } from './types/posts';
+import { graphQLMemberType } from './types/memberTypes';
 
 const getQuery = async (fastify: FastifyInstance): Promise<GraphQLObjectType> => {
-  const graphQLUser = new GraphQLObjectType({
-    name: 'GraphQLUser',
-    fields: () => ({
-      id: { type: GraphQLID },
-      firstName: { type: GraphQLString },
-      lastName: { type: GraphQLString },
-      email: { type: GraphQLString },
-      subscribedToUserIds: { type: new GraphQLList(GraphQLString) },
-    }),
-  });
-  const graphQLProfile = new GraphQLObjectType({
-    name: 'GraphQLProfile',
-    fields: () => ({
-      id: { type: GraphQLID },
-      avatar: { type: GraphQLString },
-      sex: { type: GraphQLString },
-      birthday: { type: GraphQLString },
-      country: { type: GraphQLString },
-      street: { type: GraphQLString },
-      city: { type: GraphQLString },
-      memberTypeId: { type: GraphQLString },
-      userId: { type: GraphQLID },
-    }),
-  });
-  const graphQLPost = new GraphQLObjectType({
-    name: 'GraphQLPost',
-    fields: () => ({
-      id: { type: GraphQLID },
-      title: { type: GraphQLString },
-      content: { type: GraphQLString },
-      userId: { type: GraphQLID },
-    }),
-  });
-  const graphQLMemberType = new GraphQLObjectType({
-    name: 'GraphQLMemberType',
-    fields: () => ({
-      id: { type: GraphQLID },
-      discount: { type: GraphQLString },
-      monthPostsLimit: { type: GraphQLString },
-    }),
-  });
-
   const query = new GraphQLObjectType({
     name: 'Query',
     fields: {
@@ -62,6 +24,50 @@ const getQuery = async (fastify: FastifyInstance): Promise<GraphQLObjectType> =>
       memberTypes: {
         type: new GraphQLList(graphQLMemberType),
         resolve: async () => fastify.db.memberTypes.findMany(),
+      },
+      user: {
+        type: graphQLUser,
+        args: {
+          id: { type: GraphQLID },
+        },
+        resolve: async (source, args) =>
+          fastify.db.users.findOne({
+            key: 'id',
+            equals: args.id,
+          }),
+      },
+      profile: {
+        type: graphQLProfile,
+        args: {
+          id: { type: GraphQLID },
+        },
+        resolve: async (source, args) =>
+          fastify.db.profiles.findOne({
+            key: 'id',
+            equals: args.id,
+          }),
+      },
+      post: {
+        type: graphQLPost,
+        args: {
+          id: { type: GraphQLID },
+        },
+        resolve: async (source, args) =>
+          fastify.db.posts.findOne({
+            key: 'id',
+            equals: args.id,
+          }),
+      },
+      memberType: {
+        type: graphQLMemberType,
+        args: {
+          id: { type: GraphQLID },
+        },
+        resolve: async (source, args) =>
+          fastify.db.memberTypes.findOne({
+            key: 'id',
+            equals: args.id,
+          }),
       },
     },
   });
