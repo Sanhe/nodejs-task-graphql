@@ -14,19 +14,27 @@ const graphQLUser: GraphQLOutputType = new GraphQLObjectType({
     subscribedToUserIds: { type: new GraphQLList(GraphQLString) },
     profile: {
       type: graphQLProfile,
-      resolve: async (source: UserEntity, args: unknown, { fastify }) =>
-        fastify.db.profiles.findMany({
+      resolve: async (source: UserEntity, args: unknown, { fastify }) => {
+        const userId = source.id;
+        const profile = await fastify.db.profiles.findOne({
           key: 'userId',
-          equals: source.id,
-        }),
+          equals: userId,
+        });
+
+        return profile;
+      },
     },
     posts: {
       type: new GraphQLList(graphQLPost),
-      resolve: async (source: UserEntity, args: unknown, { fastify }) =>
-        fastify.db.posts.findMany({
+      resolve: async (source: UserEntity, args: unknown, { fastify }) => {
+        const userId = source.id;
+        const posts = await fastify.db.posts.findMany({
           key: 'userId',
-          equals: source.id,
-        }),
+          equals: userId,
+        });
+
+        return posts;
+      },
     },
     memberType: {
       type: graphQLMemberType,
@@ -40,9 +48,11 @@ const graphQLUser: GraphQLOutputType = new GraphQLObjectType({
           return null;
         }
 
-        const memberType = fastify.db.memberTypes.findOne({
+        const { memberTypeId } = profile;
+
+        const memberType = await fastify.db.memberTypes.findOne({
           key: 'id',
-          equals: profile.memberTypeId,
+          equals: memberTypeId,
         });
 
         return memberType;

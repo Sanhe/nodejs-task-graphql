@@ -1,0 +1,16 @@
+{
+    user(id: "c9e401ff-b128-4bdd-81ee-53dcb7d37057") {
+        id,
+        firstName,
+        profile {
+            id,
+            avatar
+        },
+        posts {
+            id
+        },
+        memberType {
+            id
+        }
+    }
+}
