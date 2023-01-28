@@ -1,0 +1,14 @@
+{
+    users {
+        id,
+        firstName,
+        userSubscribedTo {
+            id,
+            firstName
+        },
+        profile {
+            id,
+            avatar
+        }
+    }
+}

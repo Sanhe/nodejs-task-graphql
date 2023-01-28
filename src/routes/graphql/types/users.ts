@@ -12,6 +12,18 @@ const graphQLUser: GraphQLOutputType = new GraphQLObjectType({
     lastName: { type: GraphQLString },
     email: { type: GraphQLString },
     subscribedToUserIds: { type: new GraphQLList(GraphQLString) },
+    userSubscribedTo: {
+      type: new GraphQLList(graphQLUser),
+      resolve: async (source: UserEntity, args: unknown, { fastify }) => {
+        const userId = source.id;
+        const userSubscribedTo: UserEntity[] = await fastify.db.users.findMany({
+          key: 'subscribedToUserIds',
+          inArray: userId,
+        });
+
+        return userSubscribedTo;
+      },
+    },
     profile: {
       type: graphQLProfile,
       resolve: async (source: UserEntity, args: unknown, { fastify }) => {
