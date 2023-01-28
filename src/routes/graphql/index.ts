@@ -1,10 +1,12 @@
+import { FastifyInstance } from 'fastify';
 import { graphql } from 'graphql/graphql';
 import { GraphQLSchema } from 'graphql/type';
 import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-schema-to-ts';
 import { graphqlBodySchema } from './schema';
 import { getQuery } from './querySchema';
+import { GraphQLRequestType } from './graphQLRequestType';
 
-const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify): Promise<void> => {
+const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify: FastifyInstance): Promise<void> => {
   fastify.post(
     '/',
     {
@@ -12,7 +14,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify): Promise<void> 
         body: graphqlBodySchema,
       },
     },
-    async (request) => {
+    async (request: GraphQLRequestType) => {
       const { query } = request.body;
 
       const schema = new GraphQLSchema({
@@ -22,6 +24,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify): Promise<void> 
       const response = await graphql({
         schema,
         source: String(query),
+        contextValue: { fastify },
       });
 
       return response;

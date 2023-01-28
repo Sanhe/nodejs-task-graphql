@@ -1,0 +1,16 @@
+{
+    users {
+        id,
+        firstName,
+        profile {
+            id,
+            avatar
+        },
+        posts {
+            id
+        },
+        memberType {
+            id
+        }
+    }
+}
