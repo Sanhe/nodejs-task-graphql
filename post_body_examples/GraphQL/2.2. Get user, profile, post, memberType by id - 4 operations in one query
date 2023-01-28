@@ -1,12 +1,12 @@
 {
-    user(id: "c049a808-ac98-4039-add2-d77f3aa8e081") {
+    user(id: "$userId") {
         id,
         firstName
     },
-    profile(id: "da2b9e06-398e-49cd-a153-842a7f3fc841") {
+    profile(id: "$profileId") {
         id
     },
-    post(id: "051eaef4-a9f5-4c76-83cf-afceef7e0d49") {
+    post(id: "$postId") {
         id
     },
     memberType(id: "business") {

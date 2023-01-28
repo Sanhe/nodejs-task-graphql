@@ -2,15 +2,13 @@
     user(id: "$userId") {
         id,
         firstName,
-        profile {
+        subscribedToUser {
             id,
-            avatar
+            firstName
         },
         posts {
-            id
-        },
-        memberType {
-            id
+            id,
+            title
         }
     }
 }

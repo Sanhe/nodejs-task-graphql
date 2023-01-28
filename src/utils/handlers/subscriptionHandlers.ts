@@ -6,7 +6,8 @@ const subscribeUser = async (
   subscriber: UserEntity,
   subscribee: UserEntity
 ): Promise<UserEntity> => {
-  const subscribedToUserIds = [...subscribee.subscribedToUserIds, subscriber.id];
+  subscribee.subscribedToUserIds.push(subscriber.id);
+  const subscribedToUserIds = [...new Set(subscribee.subscribedToUserIds)];
 
   const updatedSubscribee = fastify.db.users.change(subscribee.id, {
     subscribedToUserIds,
