@@ -1,10 +1,10 @@
 import { GraphQLID, GraphQLList, GraphQLObjectType, GraphQLOutputType, GraphQLString } from 'graphql/type';
 import { UserEntity } from '../../../utils/DB/entities/DBUsers';
-import { graphQLPost } from './posts';
-import { graphQLProfile } from './profiles';
-import { graphQLMemberType } from './memberTypes';
+import { graphQLOutputPost } from './graphQLOutputPost';
+import { graphQLOutputProfile } from './graphQLOutputProfile';
+import { graphQLOutputMemberType } from './graphQLOutputMemberType';
 
-const graphQLUser: GraphQLOutputType = new GraphQLObjectType({
+const graphQLOutputUser: GraphQLOutputType = new GraphQLObjectType({
   name: 'GraphQLUser',
   fields: () => ({
     id: { type: GraphQLID },
@@ -13,7 +13,7 @@ const graphQLUser: GraphQLOutputType = new GraphQLObjectType({
     email: { type: GraphQLString },
     subscribedToUserIds: { type: new GraphQLList(GraphQLString) },
     userSubscribedTo: {
-      type: new GraphQLList(graphQLUser),
+      type: new GraphQLList(graphQLOutputUser),
       resolve: async (source: UserEntity, args: unknown, { fastify }) => {
         const userId = source.id;
         const userSubscribedTo: UserEntity[] = await fastify.db.users.findMany({
@@ -25,7 +25,7 @@ const graphQLUser: GraphQLOutputType = new GraphQLObjectType({
       },
     },
     subscribedToUser: {
-      type: new GraphQLList(graphQLUser),
+      type: new GraphQLList(graphQLOutputUser),
       resolve: async (source: UserEntity, args: unknown, { fastify }) => {
         const { subscribedToUserIds } = source;
         const subscribedToUser = subscribedToUserIds.map(async (subscriberId: string) => {
@@ -41,7 +41,7 @@ const graphQLUser: GraphQLOutputType = new GraphQLObjectType({
       },
     },
     profile: {
-      type: graphQLProfile,
+      type: graphQLOutputProfile,
       resolve: async (source: UserEntity, args: unknown, { fastify }) => {
         const userId = source.id;
         const profile = await fastify.db.profiles.findOne({
@@ -53,7 +53,7 @@ const graphQLUser: GraphQLOutputType = new GraphQLObjectType({
       },
     },
     posts: {
-      type: new GraphQLList(graphQLPost),
+      type: new GraphQLList(graphQLOutputPost),
       resolve: async (source: UserEntity, args: unknown, { fastify }) => {
         const userId = source.id;
         const posts = await fastify.db.posts.findMany({
@@ -65,7 +65,7 @@ const graphQLUser: GraphQLOutputType = new GraphQLObjectType({
       },
     },
     memberType: {
-      type: graphQLMemberType,
+      type: graphQLOutputMemberType,
       resolve: async (source: UserEntity, args: unknown, { fastify }) => {
         const profile = await fastify.db.profiles.findOne({
           key: 'userId',
@@ -89,4 +89,4 @@ const graphQLUser: GraphQLOutputType = new GraphQLObjectType({
   }),
 });
 
-export { graphQLUser };
+export { graphQLOutputUser };

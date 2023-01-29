@@ -1,15 +1,14 @@
-{
-    user(id: "$userId") {
-        id,
-        firstName
-    },
-    profile(id: "$profileId") {
+query GetEveryEntityById($userId: ID, $profileId: ID, $postId: ID, $memberTypeId: ID) {
+    user(id: $userId) {
         id
     },
-    post(id: "$postId") {
+    profile(id: $profileId) {
         id
     },
-    memberType(id: "business") {
+    post(id: $postId) {
+        id
+    },
+    memberType(id: $memberTypeId) {
         id
     }
 }

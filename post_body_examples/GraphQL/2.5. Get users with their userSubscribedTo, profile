@@ -1,14 +1,11 @@
 {
     users {
         id,
-        firstName,
         userSubscribedTo {
-            id,
-            firstName
+            id
         },
         profile {
-            id,
-            avatar
+            id
         }
     }
 }

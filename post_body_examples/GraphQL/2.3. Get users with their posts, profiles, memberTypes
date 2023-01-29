@@ -1,16 +1,14 @@
 {
     users {
-        id,
-        firstName,
-        profile {
-            id,
-            avatar
-        },
-        posts {
-            id
-        },
-        memberType {
-            id
-        }
+        id
+    },
+    profiles {
+        id
+    },
+    posts {
+        id
+    },
+    memberTypes {
+        id
     }
 }

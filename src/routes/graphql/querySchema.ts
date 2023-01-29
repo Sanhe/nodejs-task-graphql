@@ -1,32 +1,32 @@
 import { FastifyInstance } from 'fastify';
 import { GraphQLID, GraphQLList, GraphQLObjectType } from 'graphql/type';
-import { graphQLUser } from './types/users';
-import { graphQLProfile } from './types/profiles';
-import { graphQLPost } from './types/posts';
-import { graphQLMemberType } from './types/memberTypes';
+import { graphQLOutputUser } from './types/graphQLOutputUser';
+import { graphQLOutputProfile } from './types/graphQLOutputProfile';
+import { graphQLOutputPost } from './types/graphQLOutputPost';
+import { graphQLOutputMemberType } from './types/graphQLOutputMemberType';
 
 const getQuery = async (fastify: FastifyInstance): Promise<GraphQLObjectType> => {
   const query = new GraphQLObjectType({
     name: 'Query',
     fields: {
       users: {
-        type: new GraphQLList(graphQLUser),
+        type: new GraphQLList(graphQLOutputUser),
         resolve: async () => fastify.db.users.findMany(),
       },
       profiles: {
-        type: new GraphQLList(graphQLProfile),
+        type: new GraphQLList(graphQLOutputProfile),
         resolve: async () => fastify.db.profiles.findMany(),
       },
       posts: {
-        type: new GraphQLList(graphQLPost),
+        type: new GraphQLList(graphQLOutputPost),
         resolve: async () => fastify.db.posts.findMany(),
       },
       memberTypes: {
-        type: new GraphQLList(graphQLMemberType),
+        type: new GraphQLList(graphQLOutputMemberType),
         resolve: async () => fastify.db.memberTypes.findMany(),
       },
       user: {
-        type: graphQLUser,
+        type: graphQLOutputUser,
         args: {
           id: { type: GraphQLID },
         },
@@ -37,18 +37,23 @@ const getQuery = async (fastify: FastifyInstance): Promise<GraphQLObjectType> =>
           }),
       },
       profile: {
-        type: graphQLProfile,
+        type: graphQLOutputProfile,
         args: {
           id: { type: GraphQLID },
         },
-        resolve: async (source, args) =>
-          fastify.db.profiles.findOne({
+        resolve: async (source, args) => {
+          const { id } = args;
+
+          const result = fastify.db.profiles.findOne({
             key: 'id',
-            equals: args.id,
-          }),
+            equals: id,
+          });
+
+          return result;
+        },
       },
       post: {
-        type: graphQLPost,
+        type: graphQLOutputPost,
         args: {
           id: { type: GraphQLID },
         },
@@ -59,7 +64,7 @@ const getQuery = async (fastify: FastifyInstance): Promise<GraphQLObjectType> =>
           }),
       },
       memberType: {
-        type: graphQLMemberType,
+        type: graphQLOutputMemberType,
         args: {
           id: { type: GraphQLID },
         },

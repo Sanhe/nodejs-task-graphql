@@ -1,10 +1,8 @@
-{
-    user(id: "$userId") {
+query GetUserWithDependenciesById($userId: ID) {
+    user(id: $userId) {
         id,
-        firstName,
         profile {
-            id,
-            avatar
+            id
         },
         posts {
             id

@@ -1,6 +1,6 @@
-import { GraphQLID, GraphQLObjectType, GraphQLString } from 'graphql/type';
+import { GraphQLID, GraphQLObjectType, GraphQLOutputType, GraphQLString } from 'graphql/type';
 
-const graphQLProfile = new GraphQLObjectType({
+const graphQLOutputProfile: GraphQLOutputType = new GraphQLObjectType({
   name: 'GraphQLProfile',
   fields: () => ({
     id: { type: GraphQLID },
@@ -15,4 +15,4 @@ const graphQLProfile = new GraphQLObjectType({
   }),
 });
 
-export { graphQLProfile };
+export { graphQLOutputProfile };

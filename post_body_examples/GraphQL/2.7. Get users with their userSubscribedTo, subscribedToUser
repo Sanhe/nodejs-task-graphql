@@ -1,29 +1,22 @@
 {
     users {
         id,
-        firstName,
         userSubscribedTo {
             id,
-            firstName,
             userSubscribedTo {
-                id,
-                firstName,
+                id
             },
             subscribedToUser {
-                id,
-                firstName
+                id
             }
         }
         subscribedToUser {
             id,
-            firstName,
             userSubscribedTo {
-                id,
-                firstName,
+                id
             },
             subscribedToUser {
-                id,
-                firstName
+                id
             }
         }
     }
