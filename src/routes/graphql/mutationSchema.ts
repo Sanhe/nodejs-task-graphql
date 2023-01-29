@@ -12,7 +12,7 @@ import { graphQLInputCreatePost } from './types/graphQLInputCreatePost';
 import { ChangePostDTO, CreatePostDTO } from '../../utils/DB/entities/DBPosts';
 import { assertCreatePost } from '../../utils/asserts/postAsserts';
 import { graphQLOutputPost } from './types/graphQLOutputPost';
-import { USER_NOT_FOUND } from '../../utils/messages/userMessages';
+import { USER_NOT_FOUND, USER_NOT_SUBSCRIBED } from '../../utils/messages/userMessages';
 import { graphQLInputUpdateUser } from './types/graphQLInputUpdateUser';
 import { graphQLInputUpdateProfile } from './types/graphQLInputUpdateProfile';
 import { graphQLInputUpdatePost } from './types/graphQLInputUpdatePost';
@@ -22,6 +22,7 @@ import { ChangeMemberTypeDTO } from '../../utils/DB/entities/DBMemberTypes';
 import { POST_NOT_FOUND } from '../../utils/messages/postMessages';
 import { PROFILE_NOT_FOUND } from '../../utils/messages/profileMessages';
 import { MEMBER_TYPE_NOT_FOUND } from '../../utils/messages/memberTypesMessages';
+import { subscribeUser, unSubscribeUser } from '../../utils/handlers/subscriptionHandlers';
 
 const getMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType> =>
   new GraphQLObjectType({
@@ -172,6 +173,66 @@ const getMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType>
           const updatedMemberType = await fastify.db.memberTypes.change(id, memberTypeDto);
 
           return updatedMemberType;
+        },
+      },
+      subscribeToUser: {
+        type: graphQLOutputUser,
+        args: {
+          id: { type: new GraphQLNonNull(GraphQLID) },
+          userId: { type: new GraphQLNonNull(GraphQLID) },
+        },
+        resolve: async (source: unknown, args) => {
+          const { id, userId } = args;
+
+          const subscriber = await fastify.db.users.findOne({
+            key: 'id',
+            equals: id,
+          });
+
+          fastify.assert(subscriber, httpStatus.HTTP_STATUS_BAD_REQUEST, USER_NOT_FOUND);
+
+          const subscribeToUser = await fastify.db.users.findOne({
+            key: 'id',
+            equals: userId,
+          });
+
+          fastify.assert(subscribeToUser, httpStatus.HTTP_STATUS_BAD_REQUEST, USER_NOT_FOUND);
+
+          const updatedSubscribee = subscribeUser(fastify, subscriber, subscribeToUser);
+
+          return updatedSubscribee;
+        },
+      },
+      unsubscribeFromUser: {
+        type: graphQLOutputUser,
+        args: {
+          id: { type: new GraphQLNonNull(GraphQLID) },
+          userId: { type: new GraphQLNonNull(GraphQLID) },
+        },
+        resolve: async (source: unknown, args) => {
+          const { id, userId } = args;
+
+          const subscriber = await fastify.db.users.findOne({
+            key: 'id',
+            equals: id,
+          });
+
+          fastify.assert(subscriber, httpStatus.HTTP_STATUS_BAD_REQUEST, USER_NOT_FOUND);
+
+          const unsubscribeFromUser = await fastify.db.users.findOne({
+            key: 'id',
+            equals: userId,
+          });
+
+          fastify.assert(unsubscribeFromUser, httpStatus.HTTP_STATUS_BAD_REQUEST, USER_NOT_FOUND);
+
+          const isSubscribed = unsubscribeFromUser.subscribedToUserIds.includes(subscriber.id);
+
+          fastify.assert(isSubscribed, httpStatus.HTTP_STATUS_BAD_REQUEST, USER_NOT_SUBSCRIBED);
+
+          const updatedUser = await unSubscribeUser(fastify, subscriber, unsubscribeFromUser);
+
+          return updatedUser;
         },
       },
     },

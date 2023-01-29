@@ -1,0 +1,5 @@
+mutation SubscribeToUser($id: ID!, $userId: ID!) {
+    subscribeToUser (id: $id, userId: $userId) {
+        id
+    }
+}

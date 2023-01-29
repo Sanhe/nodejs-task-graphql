@@ -1,0 +1,5 @@
+mutation UnsubscribeFromUser($id: ID!, $userId: ID!) {
+    unsubscribeFromUser (id: $id, userId: $userId) {
+        id
+    }
+}
