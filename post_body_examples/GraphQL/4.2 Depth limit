@@ -1,0 +1,23 @@
+query GetUserWithDepthLimitById($userId: ID) {
+    user(id: $userId) {
+        id,
+        userSubscribedTo {
+            id,
+            userSubscribedTo {
+                id,
+                userSubscribedTo {
+                    id,
+                    userSubscribedTo {
+                        id,
+                        userSubscribedTo {
+                            id,
+                            userSubscribedTo {
+                                id
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
