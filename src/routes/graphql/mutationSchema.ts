@@ -16,6 +16,12 @@ import { USER_NOT_FOUND } from '../../utils/messages/userMessages';
 import { graphQLInputUpdateUser } from './types/graphQLInputUpdateUser';
 import { graphQLInputUpdateProfile } from './types/graphQLInputUpdateProfile';
 import { graphQLInputUpdatePost } from './types/graphQLInputUpdatePost';
+import { graphQLInputUpdateMemberType } from './types/graphQLInputUpdateMemberType';
+import { graphQLOutputMemberType } from './types/graphQLOutputMemberType';
+import { ChangeMemberTypeDTO } from '../../utils/DB/entities/DBMemberTypes';
+import { POST_NOT_FOUND } from '../../utils/messages/postMessages';
+import { PROFILE_NOT_FOUND } from '../../utils/messages/profileMessages';
+import { MEMBER_TYPE_NOT_FOUND } from '../../utils/messages/memberTypesMessages';
 
 const getMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType> =>
   new GraphQLObjectType({
@@ -95,7 +101,7 @@ const getMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType>
             equals: id,
           });
 
-          fastify.assert(profile, httpStatus.HTTP_STATUS_BAD_REQUEST, USER_NOT_FOUND);
+          fastify.assert(profile, httpStatus.HTTP_STATUS_BAD_REQUEST, PROFILE_NOT_FOUND);
 
           const updatedProfile = await fastify.db.profiles.change(id, profileDto);
 
@@ -137,11 +143,35 @@ const getMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType>
             equals: id,
           });
 
-          fastify.assert(post, httpStatus.HTTP_STATUS_BAD_REQUEST, USER_NOT_FOUND);
+          fastify.assert(post, httpStatus.HTTP_STATUS_BAD_REQUEST, POST_NOT_FOUND);
 
           const updatedPost = await fastify.db.posts.change(id, postDto);
 
           return updatedPost;
+        },
+      },
+      updateMemberType: {
+        type: graphQLOutputMemberType,
+        args: {
+          id: { type: new GraphQLNonNull(GraphQLID) },
+          data: {
+            type: graphQLInputUpdateMemberType,
+          },
+        },
+        resolve: async (source: unknown, args) => {
+          const { id, data } = args;
+          const memberTypeDto: ChangeMemberTypeDTO = data;
+
+          const memberType = await fastify.db.memberTypes.findOne({
+            key: 'id',
+            equals: id,
+          });
+
+          fastify.assert(memberType, httpStatus.HTTP_STATUS_BAD_REQUEST, MEMBER_TYPE_NOT_FOUND);
+
+          const updatedMemberType = await fastify.db.memberTypes.change(id, memberTypeDto);
+
+          return updatedMemberType;
         },
       },
     },
