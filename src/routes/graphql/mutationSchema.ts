@@ -5,15 +5,16 @@ import { graphQLInputCreateUser } from './types/graphQLInputCreateUser';
 import { ChangeUserDTO, CreateUserDTO } from '../../utils/DB/entities/DBUsers';
 import { graphQLOutputProfile } from './types/graphQLOutputProfile';
 import { graphQLInputCreateProfile } from './types/graphQLInputCreateProfile';
-import { CreateProfileDTO } from '../../utils/DB/entities/DBProfiles';
+import { ChangeProfileDTO, CreateProfileDTO } from '../../utils/DB/entities/DBProfiles';
 import { assertCreateProfile } from '../../utils/asserts/profileAsserts';
 import { graphQLInputCreatePost } from './types/graphQLInputCreatePost';
 import { CreatePostDTO } from '../../utils/DB/entities/DBPosts';
 import { assertCreatePost } from '../../utils/asserts/postAsserts';
 import { graphQLOutputPost } from './types/graphQLOutputPost';
 import { constants as httpStatus } from 'http2';
-import { ID_IS_REQUIRED, REQUEST_BODY_IS_REQUIRED } from '../../utils/messages/messages';
 import { USER_NOT_FOUND } from '../../utils/messages/userMessages';
+import { graphQLInputUpdateUser } from './types/graphQLInputUpdateUser';
+import { graphQLInputUpdateProfile } from './types/graphQLInputUpdateProfile';
 
 const getMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType> =>
   new GraphQLObjectType({
@@ -22,15 +23,14 @@ const getMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType>
       createUser: {
         type: graphQLOutputUser,
         args: {
-          variables: {
+          data: {
             type: new GraphQLNonNull(graphQLInputCreateUser),
           },
         },
         resolve: async (source: unknown, args) => {
-          const { variables } = args;
-          const userDto: CreateUserDTO = variables;
+          const { data }: { data: CreateUserDTO } = args;
 
-          const user = await fastify.db.users.create(userDto);
+          const user = await fastify.db.users.create(data);
 
           return user;
         },
@@ -38,28 +38,23 @@ const getMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType>
       updateUser: {
         type: graphQLOutputUser,
         args: {
-          id: { type: new GraphQLNonNull(GraphQLID) },
-          variables: {
-            type: new GraphQLNonNull(graphQLInputCreateUser),
+          userId: { type: new GraphQLNonNull(GraphQLID) },
+          data: {
+            type: graphQLInputUpdateUser,
           },
         },
         resolve: async (source: unknown, args) => {
-          const { id, variables } = args;
-          const userDto: ChangeUserDTO = variables;
-
-          fastify.assert(id, httpStatus.HTTP_STATUS_BAD_REQUEST, ID_IS_REQUIRED);
-          fastify.assert(userDto, httpStatus.HTTP_STATUS_BAD_REQUEST, REQUEST_BODY_IS_REQUIRED);
+          const { userId, data } = args;
+          const userDto: ChangeUserDTO = data;
 
           const user = await fastify.db.users.findOne({
             key: 'id',
-            equals: id,
+            equals: userId,
           });
 
           fastify.assert(user, httpStatus.HTTP_STATUS_BAD_REQUEST, USER_NOT_FOUND);
 
-          const updatedUser = await fastify.db.users.change(id, {
-            ...userDto,
-          });
+          const updatedUser = await fastify.db.users.change(userId, userDto);
 
           return updatedUser;
         },
@@ -67,13 +62,13 @@ const getMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType>
       createProfile: {
         type: graphQLOutputProfile,
         args: {
-          variables: {
+          data: {
             type: new GraphQLNonNull(graphQLInputCreateProfile),
           },
         },
         resolve: async (source: unknown, args) => {
-          const { variables } = args;
-          const profileDto: CreateProfileDTO = variables;
+          const { data } = args;
+          const profileDto: CreateProfileDTO = data;
 
           await assertCreateProfile(profileDto, fastify);
 
@@ -82,16 +77,40 @@ const getMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType>
           return profile;
         },
       },
+      updateProfile: {
+        type: graphQLOutputProfile,
+        args: {
+          id: { type: new GraphQLNonNull(GraphQLID) },
+          data: {
+            type: graphQLInputUpdateProfile,
+          },
+        },
+        resolve: async (source: unknown, args) => {
+          const { id, data } = args;
+          const profileDto: ChangeProfileDTO = data;
+
+          const profile = await fastify.db.profiles.findOne({
+            key: 'id',
+            equals: id,
+          });
+
+          fastify.assert(profile, httpStatus.HTTP_STATUS_BAD_REQUEST, USER_NOT_FOUND);
+
+          const updatedProfile = await fastify.db.profiles.change(id, profileDto);
+
+          return updatedProfile;
+        },
+      },
       createPost: {
         type: graphQLOutputPost,
         args: {
-          variables: {
+          data: {
             type: new GraphQLNonNull(graphQLInputCreatePost),
           },
         },
         resolve: async (source: unknown, args) => {
-          const { variables } = args;
-          const postDto: CreatePostDTO = variables;
+          const { data } = args;
+          const postDto: CreatePostDTO = data;
 
           await assertCreatePost(postDto, fastify);
 

@@ -1,8 +1,5 @@
-mutation UpdateUser($id: ID!, $firstName: String!, $lastName: String!, $email: String!) {
-    updateUser (id: $id, variables: {firstName: $firstName, lastName: $lastName, email: $email}) {
-        id,
-        firstName,
-        lastName,
-        email
+mutation UpdateUser($userId: ID!, $firstName: String, $lastName: String, $email: String) {
+    updateUser (userId: $userId, data: {firstName: $firstName, lastName: $lastName, email: $email}) {
+        id
     }
 }
