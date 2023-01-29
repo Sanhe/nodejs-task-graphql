@@ -1,3 +1,4 @@
+import { constants as httpStatus } from 'node:http2';
 import { FastifyInstance } from 'fastify';
 import { GraphQLID, GraphQLNonNull, GraphQLObjectType } from 'graphql/type';
 import { graphQLOutputUser } from './types/graphQLOutputUser';
@@ -8,13 +9,13 @@ import { graphQLInputCreateProfile } from './types/graphQLInputCreateProfile';
 import { ChangeProfileDTO, CreateProfileDTO } from '../../utils/DB/entities/DBProfiles';
 import { assertCreateProfile } from '../../utils/asserts/profileAsserts';
 import { graphQLInputCreatePost } from './types/graphQLInputCreatePost';
-import { CreatePostDTO } from '../../utils/DB/entities/DBPosts';
+import { ChangePostDTO, CreatePostDTO } from '../../utils/DB/entities/DBPosts';
 import { assertCreatePost } from '../../utils/asserts/postAsserts';
 import { graphQLOutputPost } from './types/graphQLOutputPost';
-import { constants as httpStatus } from 'http2';
 import { USER_NOT_FOUND } from '../../utils/messages/userMessages';
 import { graphQLInputUpdateUser } from './types/graphQLInputUpdateUser';
 import { graphQLInputUpdateProfile } from './types/graphQLInputUpdateProfile';
+import { graphQLInputUpdatePost } from './types/graphQLInputUpdatePost';
 
 const getMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType> =>
   new GraphQLObjectType({
@@ -117,6 +118,30 @@ const getMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType>
           const post = await fastify.db.posts.create(postDto);
 
           return post;
+        },
+      },
+      updatePost: {
+        type: graphQLOutputPost,
+        args: {
+          id: { type: new GraphQLNonNull(GraphQLID) },
+          data: {
+            type: graphQLInputUpdatePost,
+          },
+        },
+        resolve: async (source: unknown, args) => {
+          const { id, data } = args;
+          const postDto: ChangePostDTO = data;
+
+          const post = await fastify.db.posts.findOne({
+            key: 'id',
+            equals: id,
+          });
+
+          fastify.assert(post, httpStatus.HTTP_STATUS_BAD_REQUEST, USER_NOT_FOUND);
+
+          const updatedPost = await fastify.db.posts.change(id, postDto);
+
+          return updatedPost;
         },
       },
     },
