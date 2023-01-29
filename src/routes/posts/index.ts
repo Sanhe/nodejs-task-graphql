@@ -9,6 +9,7 @@ import { ID_IS_REQUIRED, INTERNAL_SERVER_ERROR, REQUEST_BODY_IS_REQUIRED } from 
 import { POST_NOT_FOUND } from '../../utils/messages/postMessages';
 import { ChangePostRequestType, CreatePostRequestType } from '../../utils/requests/postRequestTypes';
 import { NoRequiredEntity } from '../../utils/DB/errors/NoRequireEntity.error';
+import { assertCreatePost } from '../../utils/asserts/postAsserts';
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify: FastifyInstance): Promise<void> => {
   fastify.get('/', async (): Promise<PostEntity[]> => {
@@ -50,9 +51,9 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify: FastifyInstance
     async (request: CreatePostRequestType, reply): Promise<PostEntity> => {
       const postDto = request.body;
 
-      fastify.assert(postDto, httpStatus.HTTP_STATUS_BAD_REQUEST, REQUEST_BODY_IS_REQUIRED);
+      await assertCreatePost(postDto, fastify);
 
-      const post = await fastify.db.posts.create(request.body);
+      const post = await fastify.db.posts.create(postDto);
 
       fastify.assert(post, httpStatus.HTTP_STATUS_BAD_REQUEST, INTERNAL_SERVER_ERROR);
 

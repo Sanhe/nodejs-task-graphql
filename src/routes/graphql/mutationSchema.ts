@@ -7,6 +7,10 @@ import { graphQLOutputProfile } from './types/graphQLOutputProfile';
 import { graphQLInputCreateProfile } from './types/graphQLInputCreateProfile';
 import { CreateProfileDTO } from '../../utils/DB/entities/DBProfiles';
 import { assertCreateProfile } from '../../utils/asserts/profileAsserts';
+import { graphQLInputCreatePost } from './types/graphQLInputCreatePost';
+import { CreatePostDTO } from '../../utils/DB/entities/DBPosts';
+import { assertCreatePost } from '../../utils/asserts/postAsserts';
+import { graphQLOutputPost } from './types/graphQLOutputPost';
 
 const getMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType> =>
   new GraphQLObjectType({
@@ -44,6 +48,24 @@ const getMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType>
           const profile = await fastify.db.profiles.create(profileDto);
 
           return profile;
+        },
+      },
+      createPost: {
+        type: graphQLOutputPost,
+        args: {
+          variables: {
+            type: new GraphQLNonNull(graphQLInputCreatePost),
+          },
+        },
+        resolve: async (source: unknown, args) => {
+          const { variables } = args;
+          const postDto: CreatePostDTO = variables;
+
+          await assertCreatePost(postDto, fastify);
+
+          const post = await fastify.db.posts.create(postDto);
+
+          return post;
         },
       },
     },

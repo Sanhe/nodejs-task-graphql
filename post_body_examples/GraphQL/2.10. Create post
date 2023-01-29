@@ -1,0 +1,5 @@
+mutation CreatePost($title: String!, $content: String!, $userId: ID!) {
+    createPost (variables: {title: $title, content: $content, userId: $userId}) {
+        id
+    }
+}
