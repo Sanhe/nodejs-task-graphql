@@ -6,15 +6,10 @@ import { createProfileBodySchema, changeProfileBodySchema } from './schema';
 import type { ProfileEntity } from '../../utils/DB/entities/DBProfiles';
 import { RequestWithParamsIdType } from '../../utils/requests/requestTypes';
 import { ID_IS_REQUIRED, INTERNAL_SERVER_ERROR, REQUEST_BODY_IS_REQUIRED } from '../../utils/messages/messages';
-import {
-  PROFILE_MEMBER_TYPE_ID_IS_REQUIRED,
-  PROFILE_NOT_FOUND,
-  PROFILE_USER_ID_IS_REQUIRED,
-  PROFILE_WITH_THIS_USER_ID_ALREADY_EXISTS,
-} from '../../utils/messages/profileMessages';
+import { PROFILE_NOT_FOUND } from '../../utils/messages/profileMessages';
 import { ChangeProfileRequestTypes, CreateProfileRequestTypes } from '../../utils/requests/profileRequestTypes';
 import { NoRequiredEntity } from '../../utils/DB/errors/NoRequireEntity.error';
-import { MEMBER_TYPE_NOT_FOUND } from '../../utils/messages/memberTypesMessages';
+import { assertCreateProfile } from '../../utils/asserts/profileAsserts';
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify: FastifyInstance): Promise<void> => {
   fastify.get('/', async (): Promise<ProfileEntity[]> => {
@@ -56,23 +51,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify: FastifyInstance
     async (request: CreateProfileRequestTypes, reply): Promise<ProfileEntity> => {
       const profileDto = request.body;
 
-      fastify.assert(profileDto, httpStatus.HTTP_STATUS_BAD_REQUEST, REQUEST_BODY_IS_REQUIRED);
-      fastify.assert(profileDto.memberTypeId, httpStatus.HTTP_STATUS_BAD_REQUEST, PROFILE_MEMBER_TYPE_ID_IS_REQUIRED);
-      fastify.assert(profileDto.userId, httpStatus.HTTP_STATUS_BAD_REQUEST, PROFILE_USER_ID_IS_REQUIRED);
-
-      const memberType = await fastify.db.memberTypes.findOne({
-        key: 'id',
-        equals: profileDto.memberTypeId,
-      });
-
-      fastify.assert(memberType, httpStatus.HTTP_STATUS_BAD_REQUEST, MEMBER_TYPE_NOT_FOUND);
-
-      const existingProfile = await fastify.db.profiles.findOne({
-        key: 'userId',
-        equals: profileDto.userId,
-      });
-
-      fastify.assert(!existingProfile, httpStatus.HTTP_STATUS_BAD_REQUEST, PROFILE_WITH_THIS_USER_ID_ALREADY_EXISTS);
+      await assertCreateProfile(profileDto, fastify);
 
       const profile = await fastify.db.profiles.create(profileDto);
 

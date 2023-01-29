@@ -1,4 +1,4 @@
-import { GraphQLID, GraphQLObjectType, GraphQLOutputType, GraphQLString } from 'graphql/type';
+import { GraphQLID, GraphQLInt, GraphQLObjectType, GraphQLOutputType, GraphQLString } from 'graphql/type';
 
 const graphQLOutputProfile: GraphQLOutputType = new GraphQLObjectType({
   name: 'GraphQLProfile',
@@ -6,11 +6,11 @@ const graphQLOutputProfile: GraphQLOutputType = new GraphQLObjectType({
     id: { type: GraphQLID },
     avatar: { type: GraphQLString },
     sex: { type: GraphQLString },
-    birthday: { type: GraphQLString },
+    birthday: { type: GraphQLInt },
     country: { type: GraphQLString },
     street: { type: GraphQLString },
     city: { type: GraphQLString },
-    memberTypeId: { type: GraphQLString },
+    memberTypeId: { type: GraphQLID },
     userId: { type: GraphQLID },
   }),
 });

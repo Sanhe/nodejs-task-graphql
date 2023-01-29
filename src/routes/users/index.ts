@@ -61,8 +61,6 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify: FastifyInstance
     async (request: CreateUserRequestType, reply): Promise<UserEntity> => {
       const userDto = request.body;
 
-      fastify.assert(userDto, httpStatus.HTTP_STATUS_BAD_REQUEST, REQUEST_BODY_IS_REQUIRED);
-
       const user = await fastify.db.users.create(userDto);
 
       fastify.assert(user, httpStatus.HTTP_STATUS_BAD_REQUEST, INTERNAL_SERVER_ERROR);
