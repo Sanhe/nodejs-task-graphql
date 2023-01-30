@@ -1,0 +1,364 @@
+{
+	"info": {
+		"_postman_id": "e11c5597-1c93-43e7-bf3a-f8b682bced9f",
+		"name": "REST",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "1876845"
+	},
+	"item": [
+		{
+			"name": "users",
+			"item": [
+				{
+					"name": "GET users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}",
+							"host": [
+								"{{URL}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET user",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"aa\": 1,\n}",
+							"options": {
+								"raw": {
+									"language": "javascript"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/users/:userId",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"users",
+								":userId"
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "PATCH user",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"Michal\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/users/:userId",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"users",
+								":userId"
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST user",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"Alex2\",\n    \"lastName\": \"Test\",\n    \"email\": \"test@test.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/users",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Subscribe user to",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": \"7050c18b-e4d8-4646-a552-040f07673c3e\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/users/:userId/subscribeTo",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"users",
+								":userId",
+								"subscribeTo"
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Unsubscribe user from",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": \"51e0c8ef-f1d4-4c9b-a6ca-aba17f93dba2\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/users/:userId/unsubscribeFrom",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"users",
+								":userId",
+								"unsubscribeFrom"
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE user",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/users/:userId",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"users",
+								":userId"
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "profiles",
+			"item": [
+				{
+					"name": "GET profiles",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}",
+							"host": [
+								"{{URL}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "POST profiles",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"avatar\": \"avatar2\",\n    \"sex\": \"man\",\n    \"birthday\": 19950619,\n    \"country\": \"Poland\",\n    \"street\": \"Grzybowska\",\n    \"city\": \"Warszawa\",\n    \"memberTypeId\": \"business\",\n    \"userId\":\"949995f1-dca9-44ac-a7dd-3361fd7d0f81\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/profiles",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"profiles"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "posts",
+			"item": [
+				{
+					"name": "POST post",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"First post A1\",\n    \"content\": \"Lorem ipsum\",\n    \"userId\": \"231a62a4-cce1-496e-9d7f-ced286b59710\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/posts",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"posts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "GET posts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/posts",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"posts"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "member-types",
+			"item": [
+				{
+					"name": "GET member-types",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/posts",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"posts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "PATCH member-type",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"Michal\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/users/:userId",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"users",
+								":userId"
+							],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "{{USER_ID}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

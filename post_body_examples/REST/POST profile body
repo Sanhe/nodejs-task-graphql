@@ -1,0 +1,10 @@
+{
+    "avatar": "avatar",
+    "sex": "man",
+    "birthday": 19950619,
+    "country": "Poland",
+    "street": "Grzybowska",
+    "city": "Warszawa",
+    "memberTypeId": "business",
+    "userId": "$userId"
+}

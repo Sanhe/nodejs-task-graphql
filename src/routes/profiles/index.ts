@@ -1,14 +1,22 @@
+import { constants as httpStatus } from 'node:http2';
+import { FastifyInstance } from 'fastify';
 import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-schema-to-ts';
 import { idParamSchema } from '../../utils/reusedSchemas';
 import { createProfileBodySchema, changeProfileBodySchema } from './schema';
 import type { ProfileEntity } from '../../utils/DB/entities/DBProfiles';
+import { RequestWithParamsIdType } from '../../utils/requests/requestTypes';
+import { ID_IS_REQUIRED, INTERNAL_SERVER_ERROR, REQUEST_BODY_IS_REQUIRED } from '../../utils/messages/messages';
+import { PROFILE_NOT_FOUND } from '../../utils/messages/profileMessages';
+import { ChangeProfileRequestTypes, CreateProfileRequestTypes } from '../../utils/requests/profileRequestTypes';
+import { NoRequiredEntity } from '../../utils/DB/errors/NoRequireEntity.error';
+import { assertCreateProfile } from '../../utils/asserts/profileAsserts';
 
-const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
-  fastify
-): Promise<void> => {
-  fastify.get('/', async function (request, reply): Promise<
-    ProfileEntity[]
-  > {});
+const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify: FastifyInstance): Promise<void> => {
+  fastify.get('/', async (): Promise<ProfileEntity[]> => {
+    const profiles = await fastify.db.profiles.findMany();
+
+    return profiles;
+  });
 
   fastify.get(
     '/:id',
@@ -17,7 +25,20 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<ProfileEntity> {}
+    async (request: RequestWithParamsIdType): Promise<ProfileEntity> => {
+      const { id } = request.params;
+
+      fastify.assert(id, httpStatus.HTTP_STATUS_BAD_REQUEST, ID_IS_REQUIRED);
+
+      const profile = await fastify.db.profiles.findOne({
+        key: 'id',
+        equals: id,
+      });
+
+      fastify.assert(profile, httpStatus.HTTP_STATUS_NOT_FOUND, PROFILE_NOT_FOUND);
+
+      return profile;
+    }
   );
 
   fastify.post(
@@ -27,7 +48,19 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         body: createProfileBodySchema,
       },
     },
-    async function (request, reply): Promise<ProfileEntity> {}
+    async (request: CreateProfileRequestTypes, reply): Promise<ProfileEntity> => {
+      const profileDto = request.body;
+
+      await assertCreateProfile(profileDto, fastify);
+
+      const profile = await fastify.db.profiles.create(profileDto);
+
+      fastify.assert(profile, httpStatus.HTTP_STATUS_BAD_REQUEST, INTERNAL_SERVER_ERROR);
+
+      reply.status(httpStatus.HTTP_STATUS_CREATED);
+
+      return profile;
+    }
   );
 
   fastify.delete(
@@ -37,7 +70,27 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<ProfileEntity> {}
+    async (request: RequestWithParamsIdType, reply): Promise<ProfileEntity> => {
+      const { id } = request.params;
+
+      fastify.assert(id, httpStatus.HTTP_STATUS_BAD_REQUEST, ID_IS_REQUIRED);
+
+      let profile;
+
+      try {
+        profile = await fastify.db.profiles.delete(id);
+      } catch (error) {
+        if (error instanceof NoRequiredEntity) {
+          fastify.assert(false, httpStatus.HTTP_STATUS_BAD_REQUEST, PROFILE_NOT_FOUND);
+        } else {
+          throw error;
+        }
+      }
+
+      reply.status(httpStatus.HTTP_STATUS_NO_CONTENT);
+
+      return profile;
+    }
   );
 
   fastify.patch(
@@ -48,7 +101,24 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<ProfileEntity> {}
+    async (request: ChangeProfileRequestTypes): Promise<ProfileEntity> => {
+      const { id } = request.params;
+      const profileDto = request.body;
+
+      fastify.assert(id, httpStatus.HTTP_STATUS_BAD_REQUEST, ID_IS_REQUIRED);
+      fastify.assert(profileDto, httpStatus.HTTP_STATUS_BAD_REQUEST, REQUEST_BODY_IS_REQUIRED);
+
+      const profile = await fastify.db.profiles.findOne({
+        key: 'id',
+        equals: id,
+      });
+
+      fastify.assert(profile, httpStatus.HTTP_STATUS_BAD_REQUEST, PROFILE_NOT_FOUND);
+
+      const updatedProfile = await fastify.db.profiles.change(id, profileDto);
+
+      return updatedProfile;
+    }
   );
 };
 

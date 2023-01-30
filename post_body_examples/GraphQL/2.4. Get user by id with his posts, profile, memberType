@@ -1,0 +1,14 @@
+query GetUserWithDependenciesById($userId: ID) {
+    user(id: $userId) {
+        id,
+        profile {
+            id
+        },
+        posts {
+            id
+        },
+        memberType {
+            id
+        }
+    }
+}

@@ -1,0 +1,12 @@
+query GetUserWithSubscribedToUserById($userId: ID) {
+    user(id: $userId) {
+        id,
+        subscribedToUser {
+            id
+        },
+        posts {
+            id,
+            title
+        }
+    }
+}

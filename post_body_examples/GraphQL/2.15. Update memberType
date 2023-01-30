@@ -1,0 +1,7 @@
+mutation UpdateMemberType($id: ID!, $discount: Int, $monthPostsLimit: Int) {
+    updateMemberType (id: $id, data: {discount: $discount, monthPostsLimit: $monthPostsLimit}) {
+        id,
+        discount,
+        monthPostsLimit
+    }
+}
