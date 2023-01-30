@@ -1,53 +1,74 @@
-import { FastifyInstance } from 'fastify';
 import { GraphQLID, GraphQLList, GraphQLObjectType } from 'graphql/type';
 import { graphQLOutputUser } from './types/graphQLOutputUser';
 import { graphQLOutputProfile } from './types/graphQLOutputProfile';
 import { graphQLOutputPost } from './types/graphQLOutputPost';
 import { graphQLOutputMemberType } from './types/graphQLOutputMemberType';
 
-const getQuery = async (fastify: FastifyInstance): Promise<GraphQLObjectType> => {
+const getQuery = async (): Promise<GraphQLObjectType> => {
   const query = new GraphQLObjectType({
     name: 'Query',
     fields: {
       users: {
         type: new GraphQLList(graphQLOutputUser),
-        resolve: async () => fastify.db.users.findMany(),
+        resolve: async (source, args, { fastify, dataLoader }) => {
+          const results = await fastify.db.users.findMany();
+
+          dataLoader.primeManyUsers(results);
+
+          return results;
+        },
       },
       profiles: {
         type: new GraphQLList(graphQLOutputProfile),
-        resolve: async () => fastify.db.profiles.findMany(),
+        resolve: async (source, args, { fastify, dataLoader }) => {
+          const results = await fastify.db.profiles.findMany();
+
+          dataLoader.primeManyProfiles(results);
+
+          return results;
+        },
       },
       posts: {
         type: new GraphQLList(graphQLOutputPost),
-        resolve: async () => fastify.db.posts.findMany(),
+        resolve: async (source, args, { fastify, dataLoader }) => {
+          const results = await fastify.db.posts.findMany();
+
+          dataLoader.primeManyPosts(results);
+
+          return results;
+        },
       },
       memberTypes: {
         type: new GraphQLList(graphQLOutputMemberType),
-        resolve: async () => fastify.db.memberTypes.findMany(),
+        resolve: async (source, args, { fastify, dataLoader }) => {
+          const results = await fastify.db.memberTypes.findMany();
+
+          dataLoader.primeMemberTypes(results);
+
+          return results;
+        },
       },
       user: {
         type: graphQLOutputUser,
         args: {
           id: { type: GraphQLID },
         },
-        resolve: async (source, args) =>
-          fastify.db.users.findOne({
-            key: 'id',
-            equals: args.id,
-          }),
+        resolve: async (source, args, { dataLoader }) => {
+          const { id } = args;
+          const result = await dataLoader.users.load(id);
+
+          return result;
+        },
       },
       profile: {
         type: graphQLOutputProfile,
         args: {
           id: { type: GraphQLID },
         },
-        resolve: async (source, args) => {
+        resolve: async (source, args, { dataLoader }) => {
           const { id } = args;
 
-          const result = fastify.db.profiles.findOne({
-            key: 'id',
-            equals: id,
-          });
+          const result = await dataLoader.profiles.load(id);
 
           return result;
         },
@@ -57,22 +78,26 @@ const getQuery = async (fastify: FastifyInstance): Promise<GraphQLObjectType> =>
         args: {
           id: { type: GraphQLID },
         },
-        resolve: async (source, args) =>
-          fastify.db.posts.findOne({
-            key: 'id',
-            equals: args.id,
-          }),
+        resolve: async (source, args, { dataLoader }) => {
+          const { id } = args;
+
+          const result = await dataLoader.posts.load(id);
+
+          return result;
+        },
       },
       memberType: {
         type: graphQLOutputMemberType,
         args: {
           id: { type: GraphQLID },
         },
-        resolve: async (source, args) =>
-          fastify.db.memberTypes.findOne({
-            key: 'id',
-            equals: args.id,
-          }),
+        resolve: async (source, args, { dataLoader }) => {
+          const { id } = args;
+
+          const result = await dataLoader.memberTypes.load(id);
+
+          return result;
+        },
       },
     },
   });

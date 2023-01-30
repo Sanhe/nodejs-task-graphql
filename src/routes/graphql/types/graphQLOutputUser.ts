@@ -14,63 +14,46 @@ const graphQLOutputUser: GraphQLOutputType = new GraphQLObjectType({
     subscribedToUserIds: { type: new GraphQLList(GraphQLString) },
     userSubscribedTo: {
       type: new GraphQLList(graphQLOutputUser),
-      resolve: async (source: UserEntity, args: unknown, { fastify }) => {
+      resolve: async (source: UserEntity, args: unknown, { dataLoader }) => {
         const userId = source.id;
-        const userSubscribedTo: UserEntity[] = await fastify.db.users.findMany({
-          key: 'subscribedToUserIds',
-          inArray: userId,
-        });
+
+        const userSubscribedTo = await dataLoader.usersBySubscribedToUserIds.load(userId);
 
         return userSubscribedTo;
       },
     },
     subscribedToUser: {
       type: new GraphQLList(graphQLOutputUser),
-      resolve: async (source: UserEntity, args: unknown, { fastify }) => {
+      resolve: async (source: UserEntity, args: unknown, { dataLoader }) => {
         const { subscribedToUserIds } = source;
-        const subscribedToUser = subscribedToUserIds.map(async (subscriberId: string) => {
-          const subscribed = await fastify.db.users.findOne({
-            key: 'id',
-            equals: subscriberId,
-          });
-
-          return subscribed;
-        });
+        const subscribedToUser = await dataLoader.users.loadMany(subscribedToUserIds);
 
         return subscribedToUser;
       },
     },
     profile: {
       type: graphQLOutputProfile,
-      resolve: async (source: UserEntity, args: unknown, { fastify }) => {
+      resolve: async (source: UserEntity, args: unknown, { dataLoader }) => {
         const userId = source.id;
-        const profile = await fastify.db.profiles.findOne({
-          key: 'userId',
-          equals: userId,
-        });
+        const profile = await dataLoader.profileByUserId.load(userId);
 
         return profile;
       },
     },
     posts: {
       type: new GraphQLList(graphQLOutputPost),
-      resolve: async (source: UserEntity, args: unknown, { fastify }) => {
+      resolve: async (source: UserEntity, args: unknown, { dataLoader }) => {
         const userId = source.id;
-        const posts = await fastify.db.posts.findMany({
-          key: 'userId',
-          equals: userId,
-        });
+        const posts = await dataLoader.postsByUserId.load(userId);
 
         return posts;
       },
     },
     memberType: {
       type: graphQLOutputMemberType,
-      resolve: async (source: UserEntity, args: unknown, { fastify }) => {
-        const profile = await fastify.db.profiles.findOne({
-          key: 'userId',
-          equals: source.id,
-        });
+      resolve: async (source: UserEntity, args: unknown, { dataLoader }) => {
+        const userId = source.id;
+        const profile = await dataLoader.profileByUserId.load(userId);
 
         if (!profile) {
           return null;
@@ -78,10 +61,7 @@ const graphQLOutputUser: GraphQLOutputType = new GraphQLObjectType({
 
         const { memberTypeId } = profile;
 
-        const memberType = await fastify.db.memberTypes.findOne({
-          key: 'id',
-          equals: memberTypeId,
-        });
+        const memberType = await dataLoader.memberTypes.load(memberTypeId);
 
         return memberType;
       },

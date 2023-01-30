@@ -1,5 +1,4 @@
 import { constants as httpStatus } from 'node:http2';
-import { FastifyInstance } from 'fastify';
 import { GraphQLID, GraphQLNonNull, GraphQLObjectType } from 'graphql/type';
 import { graphQLOutputUser } from './types/graphQLOutputUser';
 import { graphQLInputCreateUser } from './types/graphQLInputCreateUser';
@@ -24,7 +23,7 @@ import { PROFILE_NOT_FOUND } from '../../utils/messages/profileMessages';
 import { MEMBER_TYPE_NOT_FOUND } from '../../utils/messages/memberTypesMessages';
 import { subscribeUser, unSubscribeUser } from '../../utils/handlers/subscriptionHandlers';
 
-const getMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType> =>
+const getMutation = async (): Promise<GraphQLObjectType> =>
   new GraphQLObjectType({
     name: 'Mutation',
     fields: {
@@ -35,7 +34,7 @@ const getMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType>
             type: new GraphQLNonNull(graphQLInputCreateUser),
           },
         },
-        resolve: async (source: unknown, args) => {
+        resolve: async (source: unknown, args, { fastify }) => {
           const { data }: { data: CreateUserDTO } = args;
 
           const user = await fastify.db.users.create(data);
@@ -51,7 +50,7 @@ const getMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType>
             type: graphQLInputUpdateUser,
           },
         },
-        resolve: async (source: unknown, args) => {
+        resolve: async (source: unknown, args, { fastify }) => {
           const { userId, data } = args;
           const userDto: ChangeUserDTO = data;
 
@@ -74,7 +73,7 @@ const getMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType>
             type: new GraphQLNonNull(graphQLInputCreateProfile),
           },
         },
-        resolve: async (source: unknown, args) => {
+        resolve: async (source: unknown, args, { fastify }) => {
           const { data } = args;
           const profileDto: CreateProfileDTO = data;
 
@@ -93,7 +92,7 @@ const getMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType>
             type: graphQLInputUpdateProfile,
           },
         },
-        resolve: async (source: unknown, args) => {
+        resolve: async (source: unknown, args, { fastify }) => {
           const { id, data } = args;
           const profileDto: ChangeProfileDTO = data;
 
@@ -116,7 +115,7 @@ const getMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType>
             type: new GraphQLNonNull(graphQLInputCreatePost),
           },
         },
-        resolve: async (source: unknown, args) => {
+        resolve: async (source: unknown, args, { fastify }) => {
           const { data } = args;
           const postDto: CreatePostDTO = data;
 
@@ -135,7 +134,7 @@ const getMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType>
             type: graphQLInputUpdatePost,
           },
         },
-        resolve: async (source: unknown, args) => {
+        resolve: async (source: unknown, args, { fastify }) => {
           const { id, data } = args;
           const postDto: ChangePostDTO = data;
 
@@ -159,7 +158,7 @@ const getMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType>
             type: graphQLInputUpdateMemberType,
           },
         },
-        resolve: async (source: unknown, args) => {
+        resolve: async (source: unknown, args, { fastify }) => {
           const { id, data } = args;
           const memberTypeDto: ChangeMemberTypeDTO = data;
 
@@ -181,7 +180,7 @@ const getMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType>
           id: { type: new GraphQLNonNull(GraphQLID) },
           userId: { type: new GraphQLNonNull(GraphQLID) },
         },
-        resolve: async (source: unknown, args) => {
+        resolve: async (source: unknown, args, { fastify }) => {
           const { id, userId } = args;
 
           const subscriber = await fastify.db.users.findOne({
@@ -209,7 +208,7 @@ const getMutation = async (fastify: FastifyInstance): Promise<GraphQLObjectType>
           id: { type: new GraphQLNonNull(GraphQLID) },
           userId: { type: new GraphQLNonNull(GraphQLID) },
         },
-        resolve: async (source: unknown, args) => {
+        resolve: async (source: unknown, args, { fastify }) => {
           const { id, userId } = args;
 
           const subscriber = await fastify.db.users.findOne({

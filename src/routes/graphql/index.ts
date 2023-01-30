@@ -10,6 +10,7 @@ import { getQuery } from './querySchema';
 import { GraphQLRequestType } from './graphQLRequestType';
 import { getMutation } from './mutationSchema';
 import { DEPTH_LIMIT } from './configs';
+import { getDataLoader } from './dataLoaders/dataLoaders';
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify: FastifyInstance): Promise<void> => {
   fastify.post(
@@ -21,13 +22,13 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify: FastifyInstance
     },
     async (request: GraphQLRequestType) => {
       const { query, variables } = request.body;
-
+      const queryString = String(query);
       const schema = new GraphQLSchema({
-        query: await getQuery(fastify),
-        mutation: await getMutation(fastify),
+        query: await getQuery(),
+        mutation: await getMutation(),
       });
 
-      const parsedQuery = parse(String(query));
+      const parsedQuery = parse(queryString);
       const depthLimitRule = depthLimit(DEPTH_LIMIT);
 
       const errors = validate(schema, parsedQuery, [depthLimitRule]);
@@ -41,10 +42,12 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (fastify: FastifyInstance
         return errorResponse;
       }
 
+      const dataLoader = getDataLoader(fastify);
+
       const response = await graphql({
         schema,
-        source: String(query),
-        contextValue: { fastify },
+        source: queryString,
+        contextValue: { fastify, dataLoader },
         variableValues: variables,
       });
 
